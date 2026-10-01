@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# build
+dist/
+build/
+
+# local env / secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# audio/model assets - NEVER commit artist material
+*.wav
+*.mp3
+*.flac
+*.aac
+*.m4a
+*.ogg
+*.pt
+*.pth
+*.onnx
+*.ckpt
+*.safetensors
+artist-assets/
+models/
