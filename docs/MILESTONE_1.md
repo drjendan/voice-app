@@ -1,42 +1,41 @@
 # Milestone 1 - Secure Platform Foundation
 
+## Status
+Implementation complete; environment verification required before real artist data is admitted.
+
 ## Goal
 Create the minimum trustworthy platform required before any real artist recording or model enters the system.
 
-## Included in this branch
-- React/TypeScript application shell
-- Dashboard
-- Artist Digital Vault shell
-- Voice Library shell
+## Implemented
+- React/TypeScript application shell branded as Evolve AI Vocal
+- Secure sign-in and registration
+- TOTP MFA enrollment and AAL session visibility
+- Organization/tenant onboarding
+- Artist Digital Vault enrollment
+- Artist authorization approval/revocation workflow
+- Private Voice Library
+- Signed private audio upload and 60-second signed access
 - Restoration Studio shell
-- Live Performance shell
-- Security & Audit screen
+- Live Performance shell with planned bypass control
+- Security & Audit screens
 - FastAPI audio-service boundary
-- Supabase client configuration
-- Initial multi-tenant + artist-scoped schema
-- Row-level-security baseline
-- Authorization records
+- Supabase multi-tenant + artist-scoped schema
+- Row-level security and role helpers
+- Private artist-audio, artist-models, and authorization-docs storage buckets
 - Processing jobs and audit events
-- Source-control protections for secrets, audio, and model assets
+- Immutable sensitive-action audit hooks
+- JWT + RLS + artist authorization checks before restoration
+- Source-control protections for secrets, audio, and model files
+- Cross-tenant RLS smoke-test checklist
+- CI web build + Python syntax checks
 
-## Intentionally disabled
-- Artist enrollment writes
-- Recording uploads
-- Model training
-- Restoration processing
+## Intentionally reserved for Milestone 2+
+- Voice-model training
+- Audio restoration/model inference
 - Live microphone processing
-- Audio export
+- Model packaging for edge/live use
+- Final audio export workflow
+- Controlled server-side retention/deletion workflow
 
-These features remain disabled until their production security controls are implemented and verified.
-
-## Exit criteria
-1. Supabase project configured for the application.
-2. MFA policy decided and enabled for privileged users.
-3. Migration applied and RLS verified with multiple test users/tenants.
-4. Private audio/model buckets created.
-5. Signed upload/download flows implemented.
-6. Role matrix enforced server-side.
-7. Audit hooks record sensitive actions.
-8. Audio API verifies JWT + artist authorization.
-9. No production secrets appear in browser bundles or Git history.
-10. Security tests demonstrate cross-tenant and cross-artist access is denied.
+## Environment acceptance gate
+Apply migrations 0001-0004 and complete docs/DEPLOYMENT_SECURITY_CHECKLIST.md with disposable test users, tenants, artists, and dummy audio. Production artist material remains prohibited until the checklist passes.
