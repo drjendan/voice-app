@@ -1,0 +1,21 @@
+-- Manual RLS smoke-test checklist for a configured Supabase environment.
+-- Run with disposable test accounts only; do not use real artist data.
+--
+-- Test identities:
+-- user_a: member of org_a + artist_a
+-- user_b: member of org_b + artist_b
+--
+-- Expected assertions:
+-- 1. user_a SELECT artists => artist_a visible; artist_b hidden.
+-- 2. user_a SELECT recordings => artist_a recordings visible; artist_b hidden.
+-- 3. user_a storage SELECT path artist_b/... => denied.
+-- 4. user_b cannot UPDATE artist_a authorization.
+-- 5. viewer cannot INSERT recording metadata.
+-- 6. audio_engineer can INSERT artist-scoped recording metadata, but cannot manage authorizations.
+-- 7. model_engineer can access model objects only for assigned artist.
+-- 8. revoked/expired authorization makes public.authorization_is_active(...) false.
+-- 9. audit_events cannot be updated or deleted by authenticated users.
+-- 10. object paths not beginning with an authorized artist UUID are denied.
+--
+-- The deployment checklist requires screenshots/query output for these assertions
+-- before production artist material is permitted.
