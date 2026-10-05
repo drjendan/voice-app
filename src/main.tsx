@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./auth/AuthProvider";
 import "./styles.css";
+import "./milestone1.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
