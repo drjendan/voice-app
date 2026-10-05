@@ -1,24 +1,29 @@
 import type { ReactNode } from "react";
-import { Activity, AudioLines, LayoutDashboard, LockKeyhole, Mic2, ShieldCheck, Users } from "lucide-react";
+import { Activity, AudioLines, Building2, KeyRound, LayoutDashboard, LockKeyhole, LogOut, Mic2, ShieldCheck, UserPlus, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../auth/AuthProvider";
 
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/organizations", label: "Organizations", icon: Building2 },
   { to: "/artists", label: "Artists", icon: Users },
+  { to: "/artist-enrollment", label: "Enroll Artist", icon: UserPlus },
   { to: "/voice-library", label: "Voice Library", icon: AudioLines },
   { to: "/restoration-studio", label: "Restoration Studio", icon: Activity },
   { to: "/live-performance", label: "Live Performance", icon: Mic2 },
+  { to: "/security-setup", label: "Security Setup", icon: KeyRound },
   { to: "/security-audit", label: "Security & Audit", icon: ShieldCheck },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { user, aal, signOut } = useAuth();
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark"><LockKeyhole size={20} /></div>
           <div>
-            <div className="brand-name">Vocal Legacy</div>
+            <div className="brand-name">Evolve AI Vocal</div>
             <div className="brand-subtitle">Secure Voice Platform</div>
           </div>
         </div>
@@ -33,17 +38,21 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="sidebar-footer">
           <div className="security-badge">
             <ShieldCheck size={16} />
-            <span>Artist Vault Protected</span>
+            <span>{aal === "aal2" ? "MFA session active" : "Artist Vault Protected"}</span>
+          </div>
+          <div className="account-block">
+            <span title={user?.email}>{user?.email}</span>
+            <button className="sidebar-action" onClick={()=>void signOut()}><LogOut size={15}/> Sign out</button>
           </div>
         </div>
       </aside>
       <main className="main-content">
         <header className="topbar">
           <div>
-            <h1>Vocal Legacy Engine</h1>
+            <h1>Evolve AI Vocal</h1>
             <p>Authorized vocal preservation, restoration, and live performance.</p>
           </div>
-          <div className="environment-pill">Milestone 1</div>
+          <div className="environment-pill">Milestone 1 Secure Foundation</div>
         </header>
         <section className="page-content">{children}</section>
       </main>
