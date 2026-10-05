@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Activity, AudioLines, Building2, KeyRound, LayoutDashboard, LockKeyhole, LogOut, Mic2, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { Activity, AudioLines, Building2, FileUp, KeyRound, LayoutDashboard, LockKeyhole, LogOut, Mic2, ShieldCheck, UserCheck, UserPlus, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 
@@ -8,6 +8,8 @@ const navItems = [
   { to: "/organizations", label: "Organizations", icon: Building2 },
   { to: "/artists", label: "Artists", icon: Users },
   { to: "/artist-enrollment", label: "Enroll Artist", icon: UserPlus },
+  { to: "/authorizations", label: "Authorizations", icon: UserCheck },
+  { to: "/secure-upload", label: "Secure Upload", icon: FileUp },
   { to: "/voice-library", label: "Voice Library", icon: AudioLines },
   { to: "/restoration-studio", label: "Restoration Studio", icon: Activity },
   { to: "/live-performance", label: "Live Performance", icon: Mic2 },
