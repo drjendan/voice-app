@@ -1,18 +1,31 @@
 from __future__ import annotations
 
+import io
 import os
 from functools import lru_cache
 from typing import Annotated
 
 import httpx
 import jwt
-from fastapi import Depends, FastAPI, Header, HTTPException, status
+from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from jwt import PyJWKClient
 from pydantic import BaseModel, UUID4
 
+from .audio_engine import (
+    AudioValidationError,
+    analyze,
+    decode_pcm_wav,
+    encode_pcm16_wav,
+    generate_test_wav,
+    restore,
+)
+
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
+APP_ENV = os.getenv("APP_ENV", "development").lower()
+ENABLE_POC_TEST_MODE = os.getenv("ENABLE_POC_TEST_MODE", "false").lower() == "true"
 ALLOWED_ORIGINS = [
     value.strip()
     for value in os.getenv(
@@ -24,7 +37,7 @@ ALLOWED_ORIGINS = [
 
 app = FastAPI(
     title="Evolve AI Vocal Audio API",
-    version="0.1.0",
+    version="0.2.0",
     docs_url="/docs",
     redoc_url=None,
 )
@@ -35,6 +48,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+    expose_headers=["X-Evolve-Processor", "X-Evolve-Strength"],
 )
 
 
@@ -48,6 +62,32 @@ class RestorationRequest(BaseModel):
 class AuthenticatedUser(BaseModel):
     id: UUID4
     aal: str | None = None
+
+
+def require_poc_test_mode() -> None:
+    if APP_ENV == "production" or not ENABLE_POC_TEST_MODE:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="POC test mode is disabled",
+        )
+
+
+async def read_test_wav(file: UploadFile) -> bytes:
+    if file.content_type not in {
+        "audio/wav",
+        "audio/x-wav",
+        "audio/wave",
+        "application/octet-stream",
+    } and not file.filename.lower().endswith(".wav"):
+        raise HTTPException(status_code=415, detail="Milestone 2 POC accepts PCM WAV only")
+
+    data = await file.read()
+    if len(data) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="POC WAV limit is 50 MB")
+    if len(data) < 44:
+        raise HTTPException(status_code=400, detail="Invalid or empty WAV")
+
+    return data
 
 
 @lru_cache
@@ -94,13 +134,66 @@ async def postgrest_get(path: str, token: str, params: dict[str, str]) -> list[d
 
 
 @app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok", "service": "audio-api"}
+async def health() -> dict[str, str | bool]:
+    return {
+        "status": "ok",
+        "service": "audio-api",
+        "poc_test_mode": ENABLE_POC_TEST_MODE and APP_ENV != "production",
+    }
 
 
 @app.get("/v1/security/session")
 async def security_session(user: Annotated[AuthenticatedUser, Depends(current_user)]) -> dict[str, str | None]:
     return {"user_id": str(user.id), "aal": user.aal}
+
+
+@app.get("/v1/poc/test-tone")
+async def poc_test_tone(
+    duration: Annotated[float, Query(ge=1.0, le=30.0)] = 6.0,
+) -> StreamingResponse:
+    require_poc_test_mode()
+    wav = generate_test_wav(duration_seconds=duration)
+    return StreamingResponse(
+        io.BytesIO(wav),
+        media_type="audio/wav",
+        headers={"Content-Disposition": 'inline; filename="evolve-poc-test.wav"'},
+    )
+
+
+@app.post("/v1/poc/analyze")
+async def poc_analyze(file: Annotated[UploadFile, File(...)]) -> dict:
+    require_poc_test_mode()
+    data = await read_test_wav(file)
+    try:
+        audio = decode_pcm_wav(data)
+    except AudioValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return analyze(audio)
+
+
+@app.post("/v1/poc/restore")
+async def poc_restore(
+    file: Annotated[UploadFile, File(...)],
+    strength: Annotated[float, Query(ge=0.0, le=1.0)] = 0.55,
+) -> StreamingResponse:
+    require_poc_test_mode()
+    data = await read_test_wav(file)
+    try:
+        audio = decode_pcm_wav(data)
+        restored = restore(audio, strength=strength)
+        output = encode_pcm16_wav(restored)
+    except AudioValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return StreamingResponse(
+        io.BytesIO(output),
+        media_type="audio/wav",
+        headers={
+            "Content-Disposition": 'inline; filename="evolve-restored-poc.wav"',
+            "X-Evolve-Processor": "milestone2-dsp-poc-v1",
+            "X-Evolve-Strength": f"{strength:.2f}",
+        },
+    )
 
 
 @app.post("/v1/restoration/jobs", status_code=501)
@@ -109,7 +202,6 @@ async def create_restoration_job(
     token: Annotated[str, Depends(get_bearer_token)],
     user: Annotated[AuthenticatedUser, Depends(current_user)],
 ) -> dict[str, str]:
-    # 1) RLS-backed artist membership check.
     artists = await postgrest_get(
         "artists",
         token,
@@ -118,7 +210,6 @@ async def create_restoration_job(
     if not artists:
         raise HTTPException(status_code=403, detail="Artist access denied")
 
-    # 2) Active authorization must belong to the same artist and cover restoration.
     auth_rows = await postgrest_get(
         "artist_authorizations",
         token,
@@ -136,7 +227,6 @@ async def create_restoration_job(
     if "studio_restoration" not in permitted and "live_performance" not in permitted:
         raise HTTPException(status_code=403, detail="Authorization does not permit vocal processing")
 
-    # 3) Model and input recording must resolve through RLS to the same artist.
     models = await postgrest_get(
         "voice_models",
         token,
@@ -164,9 +254,7 @@ async def create_restoration_job(
     if not recordings:
         raise HTTPException(status_code=403, detail="Input recording access denied")
 
-    # Milestone 1 stops here by design. All security gates are evaluated before
-    # a future Milestone 2 processing worker is allowed to receive the asset.
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail=f"Security gate passed for user {user.id}; restoration engine begins in Milestone 2",
+        detail=f"Security gate passed for user {user.id}; authorized model inference is the next Milestone 2 step",
     )
