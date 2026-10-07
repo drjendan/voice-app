@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <img className="brand-logo" src="/evolve-ai-vocal-logo.webp" alt="Evolve AI Vocal" />
+          <div className="brand-logo-wrap"><img className="brand-logo" src="/evolve-ai-vocal-logo.webp" alt="Evolve AI Vocal" /></div>
           <div>
             <div className="brand-name">Evolve AI Vocal</div>
             <div className="brand-subtitle">Preserve • Enhance • Empower</div>
