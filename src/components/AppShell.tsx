@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Activity, AudioLines, Building2, FileUp, KeyRound, LayoutDashboard, LockKeyhole, LogOut, Mic2, ShieldCheck, UserCheck, UserPlus, Users } from "lucide-react";
+import { Activity, AudioLines, Building2, FileUp, KeyRound, LayoutDashboard, LogOut, Mic2, ShieldCheck, UserCheck, UserPlus, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 
@@ -23,10 +23,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-mark"><LockKeyhole size={20} /></div>
+          <img className="brand-logo" src="/evolve-ai-vocal-logo.webp" alt="Evolve AI Vocal" />
           <div>
             <div className="brand-name">Evolve AI Vocal</div>
-            <div className="brand-subtitle">Secure Voice Platform</div>
+            <div className="brand-subtitle">Preserve • Enhance • Empower</div>
           </div>
         </div>
         <nav className="nav-list">
@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <h1>Evolve AI Vocal</h1>
             <p>Authorized vocal preservation, restoration, and live performance.</p>
           </div>
-          <div className="environment-pill">Milestone 1 Secure Foundation</div>
+          <div className="environment-pill">Milestone 2 • Voice Restoration POC</div>
         </header>
         <section className="page-content">{children}</section>
       </main>
