@@ -1,6 +1,5 @@
 import { FormEvent, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { LockKeyhole } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../auth/AuthProvider";
 
@@ -30,8 +29,8 @@ export function LoginPage() {
   return (
     <div className="auth-screen">
       <form className="auth-card" onSubmit={submit}>
-        <div className="auth-logo"><LockKeyhole size={24}/></div>
-        <span className="eyebrow">Evolve AI Vocal</span>
+        <img className="auth-brand-logo" src="/evolve-ai-vocal-logo.webp" alt="Evolve AI Vocal" />
+        <span className="eyebrow">Preserve • Enhance • Empower</span>
         <h2>{mode === "signin" ? "Secure sign in" : "Create account"}</h2>
         <p>Authorized access only. Sensitive artist activity is audited.</p>
         <label>Email<input type="email" required value={email} onChange={e=>setEmail(e.target.value)} /></label>
