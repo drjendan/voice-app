@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, milestone-1-secure-platform-foundation]
+    branches: [main, milestone-1-secure-platform-foundation, milestone-2-voice-restoration-poc]
   pull_request:
 
 permissions:
