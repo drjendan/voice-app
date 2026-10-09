@@ -52,3 +52,22 @@ This gives us a safe integration path and UI workflow while the model architectu
 5. Original/restored can be auditioned in the web UI.
 6. POC mode rejects unsupported/non-WAV inputs.
 7. Real artist data gate remains documented and enforced.
+
+
+## Deployment
+Frontend: Netlify from `milestone-2-voice-restoration-poc`.
+
+Audio API: Render Blueprint via `render.yaml`.
+Required backend environment variables:
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `APP_ENV=staging`
+- `ENABLE_POC_TEST_MODE=true`
+- `ALLOWED_ORIGINS=https://sage-zabaione-c58f51.netlify.app`
+
+After the audio API is deployed, set the Netlify frontend environment variable:
+- `VITE_AUDIO_API_URL=https://<render-service-host>`
+
+Then redeploy the Netlify site.
+
+POC test mode is temporary. Before production release, set `ENABLE_POC_TEST_MODE=false` and route real artist processing only through authenticated, authorization-gated jobs.
