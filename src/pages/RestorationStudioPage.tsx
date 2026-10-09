@@ -16,7 +16,7 @@ type Analysis = {
   training_readiness: boolean;
 };
 
-const API_URL = (import.meta.env.VITE_AUDIO_API_URL || "").replace(/\/$/, "");
+const API_URL = (import.meta.env.VITE_AUDIO_API_URL || "https://evolve-ai-vocal-audio-api.onrender.com").replace(/\/$/, "");
 
 export function RestorationStudioPage() {
   const [file, setFile] = useState<File | null>(null);
