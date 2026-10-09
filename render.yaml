@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: evolve-ai-vocal-audio-api
+    runtime: python
+    rootDir: services/audio-api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: APP_ENV
+        value: staging
+      - key: ENABLE_POC_TEST_MODE
+        value: "true"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://sage-zabaione-c58f51.netlify.app
