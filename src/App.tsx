@@ -9,6 +9,7 @@ import { ArtistsPage } from "./pages/ArtistsPage";
 import { VoiceLibraryPage } from "./pages/VoiceLibraryPage";
 import { ArtistVoiceProfilePage } from "./pages/ArtistVoiceProfilePage";
 import { RestorationStudioPage } from "./pages/RestorationStudioPage";
+import { RestorationExperimentPage } from "./pages/RestorationExperimentPage";
 import { LivePerformancePage } from "./pages/LivePerformancePage";
 import { SecurityAuditPage } from "./pages/SecurityAuditPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -36,6 +37,7 @@ function SecureApp() {
           <Route path="/secure-upload" element={<SecureUploadPage />} />
           <Route path="/voice-library" element={<VoiceLibraryPage />} />
           <Route path="/voice-profiles" element={<ArtistVoiceProfilePage />} />
+          <Route path="/restoration-experiments" element={<RestorationExperimentPage />} />
           <Route path="/restoration-studio" element={<RestorationStudioPage />} />
           <Route path="/live-performance" element={<LivePerformancePage />} />
           <Route path="/security-setup" element={<SecuritySetupPage />} />
