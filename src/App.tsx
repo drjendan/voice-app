@@ -7,6 +7,7 @@ import type { Experience } from "./auth/roles";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ArtistsPage } from "./pages/ArtistsPage";
 import { VoiceLibraryPage } from "./pages/VoiceLibraryPage";
+import { ArtistVoiceProfilePage } from "./pages/ArtistVoiceProfilePage";
 import { RestorationStudioPage } from "./pages/RestorationStudioPage";
 import { LivePerformancePage } from "./pages/LivePerformancePage";
 import { SecurityAuditPage } from "./pages/SecurityAuditPage";
@@ -34,6 +35,7 @@ function SecureApp() {
           <Route path="/authorizations" element={<ExperienceRoute allowed={["platform_admin","artist_manager","artist"]}><AuthorizationPage /></ExperienceRoute>} />
           <Route path="/secure-upload" element={<SecureUploadPage />} />
           <Route path="/voice-library" element={<VoiceLibraryPage />} />
+          <Route path="/voice-profiles" element={<ArtistVoiceProfilePage />} />
           <Route path="/restoration-studio" element={<RestorationStudioPage />} />
           <Route path="/live-performance" element={<LivePerformancePage />} />
           <Route path="/security-setup" element={<SecuritySetupPage />} />
