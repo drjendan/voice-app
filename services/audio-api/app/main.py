@@ -20,6 +20,8 @@ from .audio_engine import (
     encode_pcm16_wav,
     generate_test_wav,
     restore,
+    reference_profile,
+    restore_to_reference,
 )
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").rstrip("/")
@@ -37,7 +39,7 @@ ALLOWED_ORIGINS = [
 
 app = FastAPI(
     title="Evolve AI Vocal Audio API",
-    version="0.2.0",
+    version="0.3.0",
     docs_url="/docs",
     redoc_url=None,
 )
@@ -191,6 +193,51 @@ async def poc_restore(
         headers={
             "Content-Disposition": 'inline; filename="evolve-restored-poc.wav"',
             "X-Evolve-Processor": "milestone2-dsp-poc-v1",
+            "X-Evolve-Strength": f"{strength:.2f}",
+        },
+    )
+
+
+@app.post("/v1/poc/reference-profile")
+async def poc_reference_profile(
+    reference: Annotated[UploadFile, File(...)],
+) -> dict:
+    require_poc_test_mode()
+    data = await read_test_wav(reference)
+    try:
+        audio = decode_pcm_wav(data)
+    except AudioValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {
+        "processor": "milestone2-reference-profile-v1",
+        "profile": reference_profile(audio),
+        "analysis": analyze(audio),
+    }
+
+
+@app.post("/v1/poc/restore-reference")
+async def poc_restore_reference(
+    current: Annotated[UploadFile, File(...)],
+    reference: Annotated[UploadFile, File(...)],
+    strength: Annotated[float, Query(ge=0.0, le=1.0)] = 0.55,
+) -> StreamingResponse:
+    require_poc_test_mode()
+    current_data = await read_test_wav(current)
+    reference_data = await read_test_wav(reference)
+    try:
+        current_audio = decode_pcm_wav(current_data)
+        reference_audio = decode_pcm_wav(reference_data)
+        restored, _ = restore_to_reference(current_audio, reference_audio, strength=strength)
+        output = encode_pcm16_wav(restored)
+    except AudioValidationError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return StreamingResponse(
+        io.BytesIO(output),
+        media_type="audio/wav",
+        headers={
+            "Content-Disposition": 'inline; filename="evolve-reference-restored-poc.wav"',
+            "X-Evolve-Processor": "milestone2-reference-conditioned-dsp-v1",
             "X-Evolve-Strength": f"{strength:.2f}",
         },
     )
