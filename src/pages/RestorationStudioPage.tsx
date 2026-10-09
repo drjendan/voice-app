@@ -27,10 +27,17 @@ export function RestorationStudioPage() {
   const [busy, setBusy] = useState<"analyze"|"restore"|null>(null);
   const [message, setMessage] = useState("Use dummy/test WAV audio until Supabase security verification is fully complete.");
 
-  useEffect(() => () => {
-    if (originalUrl) URL.revokeObjectURL(originalUrl);
-    if (restoredUrl) URL.revokeObjectURL(restoredUrl);
-  }, [originalUrl, restoredUrl]);
+  useEffect(() => {
+    return () => {
+      if (originalUrl) URL.revokeObjectURL(originalUrl);
+    };
+  }, [originalUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (restoredUrl) URL.revokeObjectURL(restoredUrl);
+    };
+  }, [restoredUrl]);
 
   const apiReady = useMemo(() => Boolean(API_URL), []);
 
