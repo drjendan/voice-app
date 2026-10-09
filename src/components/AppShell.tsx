@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Activity, AudioLines, Building2, FileUp, KeyRound, LayoutDashboard, LogOut, Mic2, ShieldCheck, Sparkles, UserCheck, UserPlus, Users } from "lucide-react";
+import { Activity, AudioLines, Beaker, Building2, FileUp, KeyRound, LayoutDashboard, LogOut, Mic2, ShieldCheck, Sparkles, UserCheck, UserPlus, Users } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { experienceLabel, type Experience } from "../auth/roles";
@@ -13,6 +13,7 @@ const navItems = [
   { to: "/secure-upload", label: "Secure Upload", icon: FileUp, experiences: ["platform_admin","artist_manager","engineer","artist"] },
   { to: "/voice-library", label: "Voice Library", icon: AudioLines, experiences: ["platform_admin","artist_manager","engineer","artist"] },
   { to: "/voice-profiles", label: "Voice Profiles", icon: Sparkles, experiences: ["platform_admin","artist_manager","engineer","artist"] },
+  { to: "/restoration-experiments", label: "Experiments", icon: Beaker, experiences: ["platform_admin","artist_manager","engineer","artist"] },
   { to: "/restoration-studio", label: "Restoration Studio", icon: Activity, experiences: ["platform_admin","artist_manager","engineer","artist"] },
   { to: "/live-performance", label: "Live Performance", icon: Mic2, experiences: ["platform_admin","artist_manager","engineer","artist"] },
   { to: "/security-setup", label: "Security Setup", icon: KeyRound, experiences: ["platform_admin","artist_manager","engineer","artist"] },
