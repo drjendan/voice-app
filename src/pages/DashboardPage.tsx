@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { AudioLines, LockKeyhole, Mic2, ShieldCheck, Users } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../auth/AuthProvider";
+import { experienceLabel } from "../auth/roles";
 
 export function DashboardPage() {
+  const { experience } = useAuth();
   const [counts,setCounts]=useState({artists:0,assets:0,models:0,events:0});
   useEffect(()=>{if(!supabase)return;(async()=>{
     const [a,r,m,e]=await Promise.all([
@@ -25,7 +28,7 @@ export function DashboardPage() {
     <div className="stack">
       <div className="hero-card">
         <div>
-          <span className="eyebrow">Secure by design</span>
+          <span className="eyebrow">{experienceLabel(experience)} • Secure by design</span>
           <h2>Protect the artist. Preserve the voice.</h2>
           <p>Evolve AI Vocal keeps recordings, training material, authorization records, and voice models inside isolated artist vaults. Model use requires active authorization and sensitive actions are auditable.</p>
         </div>
