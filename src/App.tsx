@@ -1,6 +1,9 @@
+import type { ReactNode } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/AppShell";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
+import { useAuth } from "./auth/AuthProvider";
+import type { Experience } from "./auth/roles";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ArtistsPage } from "./pages/ArtistsPage";
 import { VoiceLibraryPage } from "./pages/VoiceLibraryPage";
@@ -14,16 +17,21 @@ import { ArtistEnrollmentPage } from "./pages/ArtistEnrollmentPage";
 import { AuthorizationPage } from "./pages/AuthorizationPage";
 import { SecureUploadPage } from "./pages/SecureUploadPage";
 
+function ExperienceRoute({ allowed, children }: { allowed: Experience[]; children: ReactNode }) {
+  const { experience } = useAuth();
+  return allowed.includes(experience) ? <>{children}</> : <Navigate to="/" replace />;
+}
+
 function SecureApp() {
   return (
     <ProtectedRoute>
       <AppShell>
         <Routes>
           <Route path="/" element={<DashboardPage />} />
-          <Route path="/organizations" element={<OrganizationSetupPage />} />
-          <Route path="/artists" element={<ArtistsPage />} />
-          <Route path="/artist-enrollment" element={<ArtistEnrollmentPage />} />
-          <Route path="/authorizations" element={<AuthorizationPage />} />
+          <Route path="/organizations" element={<ExperienceRoute allowed={["platform_admin"]}><OrganizationSetupPage /></ExperienceRoute>} />
+          <Route path="/artists" element={<ExperienceRoute allowed={["platform_admin","artist_manager","engineer"]}><ArtistsPage /></ExperienceRoute>} />
+          <Route path="/artist-enrollment" element={<ExperienceRoute allowed={["platform_admin"]}><ArtistEnrollmentPage /></ExperienceRoute>} />
+          <Route path="/authorizations" element={<ExperienceRoute allowed={["platform_admin","artist_manager","artist"]}><AuthorizationPage /></ExperienceRoute>} />
           <Route path="/secure-upload" element={<SecureUploadPage />} />
           <Route path="/voice-library" element={<VoiceLibraryPage />} />
           <Route path="/restoration-studio" element={<RestorationStudioPage />} />
