@@ -166,3 +166,79 @@ def generate_test_wav(duration_seconds: float = 6.0, sample_rate: int = 48_000) 
     signal = (base + harmonic) * vibrato * np.clip(envelope, 0.0, 1.0)
     audio = WavAudio(signal.reshape(-1, 1).astype(np.float32), sample_rate, 1, 2)
     return encode_pcm16_wav(audio)
+
+
+def reference_profile(audio: WavAudio) -> dict[str, float]:
+    """Extract a lightweight, non-biometric DSP target profile from authorized reference audio."""
+    mono = to_mono(audio)
+    eps = 1e-12
+    rms = float(np.sqrt(np.mean(np.square(mono))) + eps)
+    peak = float(np.max(np.abs(mono)) + eps)
+    crest_db = 20.0 * math.log10(peak / rms)
+    zcr = float(np.mean(np.abs(np.diff(np.signbit(mono)).astype(np.float32))))
+
+    window = np.hanning(len(mono)).astype(np.float32)
+    spectrum = np.abs(np.fft.rfft(mono * window))
+    freqs = np.fft.rfftfreq(len(mono), d=1.0 / audio.sample_rate)
+    total = float(np.sum(spectrum) + eps)
+    centroid = float(np.sum(freqs * spectrum) / total)
+
+    low_mask = freqs < 500.0
+    presence_mask = (freqs >= 2000.0) & (freqs <= 5000.0)
+    high_mask = freqs > 5000.0
+    low_ratio = float(np.sum(spectrum[low_mask]) / total)
+    presence_ratio = float(np.sum(spectrum[presence_mask]) / total)
+    high_ratio = float(np.sum(spectrum[high_mask]) / total)
+
+    return {
+        "rms_dbfs": round(20.0 * math.log10(max(rms, eps)), 2),
+        "crest_factor_db": round(crest_db, 2),
+        "zero_crossing_rate": round(zcr, 6),
+        "spectral_centroid_hz": round(centroid, 1),
+        "low_energy_ratio": round(low_ratio, 4),
+        "presence_energy_ratio": round(presence_ratio, 4),
+        "high_energy_ratio": round(high_ratio, 4),
+    }
+
+
+def restore_to_reference(source: WavAudio, reference: WavAudio, strength: float) -> tuple[WavAudio, dict[str, float]]:
+    """Condition the DSP restoration using broad acoustic characteristics from a reference WAV.
+
+    This is a Milestone 2 profile-matching POC, not voice cloning or identity synthesis.
+    """
+    strength = max(0.0, min(1.0, strength))
+    profile = reference_profile(reference)
+    source_profile = reference_profile(source)
+
+    target_presence = profile["presence_energy_ratio"]
+    source_presence = source_profile["presence_energy_ratio"]
+    presence_delta = max(-0.12, min(0.20, (target_presence - source_presence) * 3.0))
+
+    target_crest = profile["crest_factor_db"]
+    source_crest = source_profile["crest_factor_db"]
+    compression_delta = max(-0.25, min(0.45, (source_crest - target_crest) / 12.0))
+
+    target_rms = profile["rms_dbfs"]
+    restored_channels: list[np.ndarray] = []
+
+    for ch in range(source.channels):
+        original = source.samples[:, ch].astype(np.float32)
+        cleaned = original - float(np.mean(original))
+        cleaned = _high_pass_one_pole(cleaned, source.sample_rate)
+        cleaned = _presence_emphasis(cleaned, 0.10 + 0.16 * strength + presence_delta * strength)
+        cleaned = _soft_compress(cleaned, max(0.9, 1.1 + 0.45 * strength + compression_delta * strength))
+
+        current_rms = float(np.sqrt(np.mean(np.square(cleaned))) + 1e-12)
+        desired_rms = 10.0 ** (target_rms / 20.0)
+        gain = max(0.7, min(1.35, desired_rms / current_rms))
+        cleaned = cleaned * (1.0 + (gain - 1.0) * strength)
+
+        peak = float(np.max(np.abs(cleaned)))
+        if peak > 0:
+            cleaned = cleaned * min(1.0, 0.94 / peak)
+
+        mixed = (1.0 - strength) * original + strength * cleaned
+        restored_channels.append(np.clip(mixed, -0.98, 0.98))
+
+    out = np.stack(restored_channels, axis=1).astype(np.float32)
+    return WavAudio(samples=out, sample_rate=source.sample_rate, channels=source.channels, sample_width=2), profile
